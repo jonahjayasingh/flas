@@ -1,23 +1,22 @@
 from flask import Flask, render_template, Response
 from ultralytics import YOLO
-import torch
 import cv2
 
 app = Flask(__name__)
 
-# ---- Fix WeightsUnpickler errors when loading YOLO model ----
-from ultralytics.nn.tasks import DetectionModel
-from torch.nn import Sequential
-
-torch.serialization.add_safe_globals([DetectionModel, Sequential])
-
-# Load YOLOv8 model
-model = YOLO("best.pt")
+# ---- Load YOLOv8 model ----
+model = YOLO("best.pt", weights_only=False)  # Fixes unpickling error
 
 # ---- Open webcam ----
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     raise RuntimeError("Could not start webcam.")
+
+# ---- Ensure webcam is released on exit ----
+import atexit
+@atexit.register
+def cleanup():
+    cap.release()
 
 # ---- Frame generator ----
 def generate_frames():
@@ -26,13 +25,9 @@ def generate_frames():
         if not success:
             break
 
-        # Run YOLO inference
         results = model(frame, conf=0.25, iou=0.45)
-
-        # Auto-annotate detections
         annotated_frame = results[0].plot()
 
-        # Encode frame as JPEG
         ret, buffer = cv2.imencode('.jpg', annotated_frame)
         if not ret:
             continue
@@ -44,7 +39,7 @@ def generate_frames():
 # ---- Routes ----
 @app.route('/')
 def index():
-    return render_template('index.html')  # Make sure you have templates/index.html
+    return render_template('index.html')
 
 @app.route('/video_feed')
 def video_feed():
