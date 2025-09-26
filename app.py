@@ -11,6 +11,11 @@ app = Flask(__name__)
 # model = YOLO("best.pt")
 
 # Option 2: Safer: load weights-only checkpoint (recommended)
+model_path = "best.pt"
+if not os.path.exists(model_path):
+    raise FileNotFoundError(f"{model_path} not found. Make sure it's uploaded!")
+
+model = YOLO(model_path)
 ckpt = torch.load("best.pt", map_location="cpu", weights_only=False)
 model = YOLO(ckpt)
 
