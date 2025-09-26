@@ -1,11 +1,16 @@
 from flask import Flask, render_template, Response
 from ultralytics import YOLO
 import cv2
+import atexit
 
 app = Flask(__name__)
 
-# ---- Load YOLOv8 model ----
-model = YOLO("best.pt", weights_only=False)  # Fixes unpickling error
+# ---- Load YOLOv8 model (weights-only recommended) ----
+# Option 1: Load full checkpoint (trusted file)
+# model = YOLO("best.pt")
+
+# Option 2: Safer: load weights-only checkpoint (recommended)
+model = YOLO("best_weights.pt")
 
 # ---- Open webcam ----
 cap = cv2.VideoCapture(0)
@@ -13,7 +18,6 @@ if not cap.isOpened():
     raise RuntimeError("Could not start webcam.")
 
 # ---- Ensure webcam is released on exit ----
-import atexit
 @atexit.register
 def cleanup():
     cap.release()
@@ -25,9 +29,11 @@ def generate_frames():
         if not success:
             break
 
+        # Run YOLO inference
         results = model(frame, conf=0.25, iou=0.45)
         annotated_frame = results[0].plot()
 
+        # Encode frame as JPEG
         ret, buffer = cv2.imencode('.jpg', annotated_frame)
         if not ret:
             continue
