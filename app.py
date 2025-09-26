@@ -10,7 +10,7 @@ app = Flask(__name__)
 # model = YOLO("best.pt")
 
 # Option 2: Safer: load weights-only checkpoint (recommended)
-model = YOLO("bests.pt")
+model = YOLO("best.pt")
 
 # ---- Open webcam ----
 cap = cv2.VideoCapture(0)
