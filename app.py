@@ -10,7 +10,8 @@ app = Flask(__name__)
 # model = YOLO("best.pt")
 
 # Option 2: Safer: load weights-only checkpoint (recommended)
-model = YOLO("best.pt")
+ckpt = torch.load("best.pt", map_location="cpu", weights_only=False)
+model = YOLO(ckpt)
 
 # ---- Open webcam ----
 cap = cv2.VideoCapture(0)
