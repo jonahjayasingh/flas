@@ -5,9 +5,11 @@ import cv2
 
 app = Flask(__name__)
 
-# ---- Fix WeightsUnpickler error when loading YOLO model ----
+# ---- Fix WeightsUnpickler errors when loading YOLO model ----
 from ultralytics.nn.tasks import DetectionModel
-torch.serialization.add_safe_globals([DetectionModel])
+from torch.nn import Sequential
+
+torch.serialization.add_safe_globals([DetectionModel, Sequential])
 
 # Load YOLOv8 model
 model = YOLO("best.pt")
